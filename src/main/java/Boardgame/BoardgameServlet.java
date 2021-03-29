@@ -7,10 +7,18 @@ package Boardgame;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
 
 /**
  *
@@ -30,17 +38,39 @@ public class BoardgameServlet extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet BoardgameServlet</title>");            
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet BoardgameServlet at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
+        
+        try {
+            Context initContext = new InitialContext();
+            Context envContext = (Context) initContext.lookup("java:comp/env");
+            DataSource ds = (DataSource) envContext.lookup("jdbc/boardgame_database");
+            Connection conn = ds.getConnection();
+        
+            Statement statement = conn.createStatement();
+            String sql = "select id, name, release_date, designer, price from boardgame_table";
+            ResultSet rs = statement.executeQuery(sql);            
+
+            try (PrintWriter out = response.getWriter()) {
+                /* TODO output your page here. You may use following sample code. */            
+                out.println("<!DOCTYPE html>");
+                out.println("<html>");
+                out.println("<head>");
+                out.println("<title>BoardgameServlet</title>");
+                out.println("</head>");
+                out.println("<body>");
+                while (rs.next()) {
+                    out.println("<tr>");
+                    out.println(String.format("<td>%s</td>", rs.getString("id")));
+                    out.println(String.format("<td>%s</td>", rs.getString("name")));
+                    out.println(String.format("<td>%s</td>", rs.getString("release_date")));
+                    out.println(String.format("<td>%s</td>", rs.getString("designer")));
+                    out.println(String.format("<td>%s</td>", rs.getString("price")));
+                    out.println("</tr>");
+                }
+                out.println("</body>");
+                out.println("</html>");
+            }
+        } catch (NamingException | SQLException ex) {
+            System.err.println(ex);
         }
     }
 
