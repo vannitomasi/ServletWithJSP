@@ -5,20 +5,18 @@
  */
 package Boardgame;
 
+import Boardgame.Data.SingletonDatabaseContext;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import javax.naming.Context;
-import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.sql.DataSource;
 
 /**
  *
@@ -40,11 +38,13 @@ public class BoardgameServlet extends HttpServlet {
         response.setContentType("text/html;charset=UTF-8");
         
         try {
-            Context initContext = new InitialContext();
+            /* Context initContext = new InitialContext();
             Context envContext = (Context) initContext.lookup("java:comp/env");
             DataSource ds = (DataSource) envContext.lookup("jdbc/boardgame_database");
-            Connection conn = ds.getConnection();
+            Connection conn2 = ds.getConnection();*/
         
+            Connection conn = SingletonDatabaseContext.getInstance().getConnection();
+            
             Statement statement = conn.createStatement();
             String sql = "select id, name, release_date, designer, price from boardgame_table";
             ResultSet rs = statement.executeQuery(sql);            
@@ -57,6 +57,15 @@ public class BoardgameServlet extends HttpServlet {
                 out.println("<title>BoardgameServlet</title>");
                 out.println("</head>");
                 out.println("<body>");
+                out.println("<table border=\"1\" cellpadding=\"5\">");
+                out.println("<caption><h2>Boardgame list</h2></caption>");
+                out.println("<tr>");
+                out.println("    <th>Id</th>");
+                out.println("    <th>Name</th>");
+                out.println("    <th>Release date</th>");
+                out.println("    <th>Designer</th>");
+                out.println("    <th>Price</th>");
+                out.println("</tr>");
                 while (rs.next()) {
                     out.println("<tr>");
                     out.println(String.format("<td>%s</td>", rs.getString("id")));
@@ -65,11 +74,12 @@ public class BoardgameServlet extends HttpServlet {
                     out.println(String.format("<td>%s</td>", rs.getString("designer")));
                     out.println(String.format("<td>%s</td>", rs.getString("price")));
                     out.println("</tr>");
-                }
+                }            
+                out.println("</table>");
                 out.println("</body>");
                 out.println("</html>");
             }
-        } catch (NamingException | SQLException ex) {
+        } catch (SQLException ex) {
             System.err.println(ex);
         }
     }
