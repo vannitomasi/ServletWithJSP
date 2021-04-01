@@ -17,7 +17,7 @@
         <title>Boardgame home page</title>
     </head>
     <body>
-         <div align="center">
+         <div align="center">             
             <table border="1" cellpadding="5">
                 <caption><h2>Boardgame list</h2></caption>
                 <tr>
@@ -26,6 +26,19 @@
                     <th>Release date</th>
                     <th>Designer</th>
                     <th>Price</th>
+                </tr>
+                <tr>
+                    <form method="GET" action="${pageContext.request.contextPath}/BoardgameServlet">
+                        <td></td>
+                        <td><input type="text" name="boardgameName" /> </td>
+                        <td><input type="datetime-local" name="boardgameReleaseDate" /> </td>
+                        <td><input type="text" name="boardgameDesigner" /> </td>
+                        <td></td>
+                        <td colspan ="2">
+                            <input type="submit" value= "Submit" />
+                            <a href="${pageContext.request.contextPath}/">Cancel</a>
+                        </td>
+                    </form>
                 </tr>
                 <c:forEach var="boardgame" items="${boardgameList.rows}">
                     <tr>
