@@ -3,21 +3,12 @@
     Created on : Mar 29, 2021, 10:19:57 PM
     Author     : vanni
 --%>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/sql" prefix="sql" %>
-<%@page contentType="text/html" pageEncoding="windows-1252"%>
-
-<sql:query var="boardgameList" dataSource="jdbc/boardgame_database">
-    select id, name, release_date, designer, price from boardgame_table
-</sql:query>
-    
+<%@page language="java" contentType="text/html" pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>  
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
-        <title>Boardgame home page</title>
-    </head>
     <body>
-         <div align="center">             
+         <div align="center">
             <table border="1" cellpadding="5">
                 <caption><h2>Boardgame list</h2></caption>
                 <tr>
@@ -29,10 +20,11 @@
                 </tr>
                 <tr>
                     <form method="GET" action="${pageContext.request.contextPath}/BoardgameServlet">
-                        <td></td>
-                        <td><input type="text" name="boardgameName" /> </td>
+                        <td><input type="text" name="boardgameId" /></td>
+                        <td><input type="text" name="boardgameName" /></td>
                         <td><input type="datetime-local" name="boardgameReleaseDate" /> </td>
                         <td><input type="text" name="boardgameDesigner" /> </td>
+                        <td><input type="text" name="boardgamePrice" /> </td>
                         <td></td>
                         <td colspan ="2">
                             <input type="submit" value= "Submit" />
@@ -40,13 +32,13 @@
                         </td>
                     </form>
                 </tr>
-                <c:forEach var="boardgame" items="${boardgameList.rows}">
+                <c:forEach items="${boardgameList}" var="boardgame">
                     <tr>
-                        <td><c:out value="${boardgame.id}" /></td>
-                        <td><c:out value="${boardgame.name}" /></td>
-                        <td><c:out value="${boardgame.release_date}" /></td>
-                        <td><c:out value="${boardgame.designer}" /></td>
-                        <td><c:out value="${boardgame.price}" /></td>
+                        <td>${boardgame.getId()}</td>
+                        <td>${boardgame.getName()}</td>
+                        <td>${boardgame.getReleaseDate()}</td>
+                        <td>${boardgame.getDesigner()}</td>
+                        <td>${boardgame.getPrice()}</td>
                     </tr>
                 </c:forEach>
             </table>

@@ -5,24 +5,26 @@
  */
 package Boardgame;
 
-import Boardgame.Data.SingletonDatabaseContext;
+import Boardgame.Data.Models.Boardgame;
+import Boardgame.Data.Utils.BoardgameQuery;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+// TO DO 2021/05/04 TomasiV compiler says "uses unchecked or unsafe operations."
 /**
  *
  * @author vanni
  */
-public class BoardgameServlet extends HttpServlet {
-
+public class BoardgameServlet extends HttpServlet {    
+    
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -33,72 +35,23 @@ public class BoardgameServlet extends HttpServlet {
      * @throws IOException if an I/O error occurs
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws IOException, ServletException, SQLException {
         response.setContentType("text/html;charset=UTF-8");
-        
+                
         // TO DO 2021/4/1 TomasiV create a BoardgameClass
         // TO DO 2021/4/1 TomasiV create a constant class
-        String boardgameName = request.getParameter("boardgameName");
-        String boardgameReleaseDate = request.getParameter("boardgameReleaseDate");
-        String boardgameDesigner = request.getParameter("boardgameDesigner");
+        Boardgame boardgame = new Boardgame(
+            request.getParameter("boardgameId"),
+            request.getParameter("boardgameName"),
+            request.getParameter("boardgameReleaseDate"),
+            request.getParameter("boardgameDesigner"),
+            request.getParameter("boardgamePrice")
+        );
         try {
-            /* Context initContext = new InitialContext();
-            Context envContext = (Context) initContext.lookup("java:comp/env");
-            DataSource ds = (DataSource) envContext.lookup("jdbc/boardgame_database");
-            Connection conn2 = ds.getConnection();*/
-        
-            Connection conn = SingletonDatabaseContext.getInstance().getConnection();
+            List<Boardgame> boardgames = BoardgameQuery.getByFilter(boardgame);
             
-            Statement statement = conn.createStatement();
-            String sql = "select id, name, release_date, designer, price from boardgame_table";
-            if (!boardgameName.isEmpty() || !boardgameReleaseDate.isEmpty() || !boardgameDesigner.isEmpty()) {
-                sql = sql.concat(" where");                
-            }
-            
-            if (!boardgameName.isEmpty()) {
-                sql = sql.concat(" name like ").concat("'%").concat(boardgameName).concat("%'");
-            }
-            
-            if (!boardgameReleaseDate.isEmpty()) {
-                sql = sql.concat(" and release_date = ").concat("TO_DATE('").concat(boardgameReleaseDate).concat("', 'YYYY-MM-DD')");
-            }
-            
-            if (!boardgameDesigner.isEmpty()) {
-                sql = sql.concat(" and designer like ").concat("'%").concat(boardgameDesigner).concat("%'");
-            }
-            
-            ResultSet rs = statement.executeQuery(sql);            
-
-            try (PrintWriter out = response.getWriter()) {
-                /* TODO output your page here. You may use following sample code. */            
-                out.println("<!DOCTYPE html>");
-                out.println("<html>");
-                out.println("<head>");
-                out.println("<title>BoardgameServlet</title>");
-                out.println("</head>");
-                out.println("<body>");
-                out.println("<table border=\"1\" cellpadding=\"5\">");
-                out.println("<caption><h2>Boardgame list</h2></caption>");
-                out.println("<tr>");
-                out.println("    <th>Id</th>");
-                out.println("    <th>Name</th>");
-                out.println("    <th>Release date</th>");
-                out.println("    <th>Designer</th>");
-                out.println("    <th>Price</th>");
-                out.println("</tr>");
-                while (rs.next()) {
-                    out.println("<tr>");
-                    out.println(String.format("<td>%s</td>", rs.getString("id")));
-                    out.println(String.format("<td>%s</td>", rs.getString("name")));
-                    out.println(String.format("<td>%s</td>", rs.getString("release_date")));
-                    out.println(String.format("<td>%s</td>", rs.getString("designer")));
-                    out.println(String.format("<td>%s</td>", rs.getString("price")));
-                    out.println("</tr>");
-                }            
-                out.println("</table>");
-                out.println("</body>");
-                out.println("</html>");
-            }
+            request.setAttribute("boardgameList", boardgames);
+            this.getServletContext().getRequestDispatcher("/boardgame-home.jsp").forward(request, response);
         } catch (SQLException ex) {
             System.err.println(ex);
         }
@@ -116,7 +69,11 @@ public class BoardgameServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        try {
+            processRequest(request, response);
+        } catch (SQLException ex) {
+            Logger.getLogger(BoardgameServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     /**
@@ -130,7 +87,11 @@ public class BoardgameServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        try {
+            processRequest(request, response);
+        } catch (SQLException ex) {
+            Logger.getLogger(BoardgameServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     /**
