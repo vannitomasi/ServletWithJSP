@@ -5,25 +5,22 @@
  */
 package Boardgame;
 
-import Boardgame.Data.Models.Boardgame;
-import Boardgame.Data.Utils.BoardgameQuery;
 import java.io.IOException;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.io.PrintWriter;
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-// TO DO 2021/05/04 TomasiV compiler says "uses unchecked or unsafe operations."
 /**
  *
  * @author vanni
  */
-public class BoardgameServlet extends HttpServlet {    
-    
+@WebServlet(name = "HomeServlet", urlPatterns = {"/HomeServlet"})
+public class HomeServlet extends HttpServlet {
+
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -34,26 +31,9 @@ public class BoardgameServlet extends HttpServlet {
      * @throws IOException if an I/O error occurs
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws IOException, ServletException, SQLException {
-        response.setContentType("text/html;charset=UTF-8");
-        
-        // TO DO 2021/4/1 TomasiV create a BoardgameClass
-        // TO DO 2021/4/1 TomasiV create a constant class
-        Boardgame boardgame = new Boardgame(
-            request.getParameter("boardgameId"),
-            request.getParameter("boardgameName"),
-            request.getParameter("boardgameReleaseDate"),
-            request.getParameter("boardgameDesigner"),
-            request.getParameter("boardgamePrice")
-        );
-        try {
-            List<Boardgame> boardgames = BoardgameQuery.getByFilter(boardgame);
-            
-            request.setAttribute("boardgameList", boardgames);
-            this.getServletContext().getRequestDispatcher("/WEB-INF/main/boardgame-home.jsp").forward(request, response);
-        } catch (SQLException ex) {
-            System.err.println(ex);
-        }
+            throws ServletException, IOException {
+        RequestDispatcher dispatcher = this.getServletContext().getRequestDispatcher("/WEB-INF/main/boardgame-home.jsp");
+        dispatcher.forward(request, response);
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
@@ -68,11 +48,7 @@ public class BoardgameServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        try {
-            processRequest(request, response);
-        } catch (SQLException ex) {
-            Logger.getLogger(BoardgameServlet.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        processRequest(request, response);
     }
 
     /**
@@ -86,11 +62,7 @@ public class BoardgameServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        try {
-            processRequest(request, response);
-        } catch (SQLException ex) {
-            Logger.getLogger(BoardgameServlet.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        processRequest(request, response);
     }
 
     /**

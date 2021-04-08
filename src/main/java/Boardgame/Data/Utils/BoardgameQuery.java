@@ -62,13 +62,13 @@ public class BoardgameQuery {
         
         StringBuilder sqlQueryBuilder = new StringBuilder(selectQuery);
         Stack<String> queryConditionJoinOperators = new Stack<>();        
-        queryConditionJoinOperators.push("WHERE");
+        queryConditionJoinOperators.push(SqlComparisonOperator.POSTGRESQL_WHERE_CONDITION_START_KEYWORD);
                 
         whereConditions.forEach((String where) -> {
             String joinOperator;
 
             if (queryConditionJoinOperators.empty()) {
-                queryConditionJoinOperators.push("AND");
+                queryConditionJoinOperators.push(SqlComparisonOperator.POSTGRESQL_AND_OPERATOR_KEYWORD);
             }
                         
             joinOperator = queryConditionJoinOperators.pop();

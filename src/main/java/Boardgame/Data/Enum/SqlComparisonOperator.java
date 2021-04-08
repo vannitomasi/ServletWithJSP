@@ -19,7 +19,10 @@ public enum SqlComparisonOperator {
     private final boolean hasStartWildcar;
     private final boolean hasEndWildcar;
 
+    // TO DO 2021/04/08 TomasiV move to a costant class
     public static final String POSTGRESQL_QUOTE = "'";
+    public static final String POSTGRESQL_AND_OPERATOR_KEYWORD = "AND";
+    public static final String POSTGRESQL_WHERE_CONDITION_START_KEYWORD = "WHERE";
     public static final String POSTGRESQL_WILDCAR = "%";
     
     SqlComparisonOperator(final String operatorName, final boolean hasStartWildcar, final boolean hasEndWildcar) {
