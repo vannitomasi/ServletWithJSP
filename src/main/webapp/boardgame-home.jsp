@@ -8,7 +8,8 @@
 <!DOCTYPE html>
 <html>
     <body>
-         <div align="center">
+        <%--<jsp:include page="WEB-INF/main/shared/header.jsp"></jsp:include>--%> 
+        <div align="center">
             <table border="1" cellpadding="5">
                 <caption><h2>Boardgame list</h2></caption>
                 <tr>
@@ -27,21 +28,28 @@
                         <td><input type="text" name="boardgamePrice" /> </td>
                         <td></td>
                         <td colspan ="2">
-                            <input type="submit" value= "Submit" />
+                            <input type="submit" value= "Filter" />
                             <a href="${pageContext.request.contextPath}/">Cancel</a>
                         </td>
                     </form>
                 </tr>
                 <c:forEach items="${boardgameList}" var="boardgame">
                     <tr>
-                        <td>${boardgame.getId()}</td>
-                        <td>${boardgame.getName()}</td>
-                        <td>${boardgame.getReleaseDate()}</td>
-                        <td>${boardgame.getDesigner()}</td>
-                        <td>${boardgame.getPrice()}</td>
+                        <form method="POST" action="${pageContext.request.contextPath}/BoardgameServlet">
+                            <td><input type="text" name="boardgameId" />${boardgame.getId()}</td>
+                            <td><input type="text" name="boardgameName" />${boardgame.getName()}</td>
+                            <td><input type="datetime-local" name="boardgameReleaseDate" />${boardgame.getReleaseDate()}</td>
+                            <td><input type="text" name="boardgameDesigner" />${boardgame.getDesigner()}</td>
+                            <td><input type="text" name="boardgamePrice" />${boardgame.getPrice()}</td>
+                            <td></td>
+                            <td colspan ="2">
+                                <input type="submit" value= "Edit" />
+                                <a href="${pageContext.request.contextPath}/">Cancel</a>
+                            </td>
                     </tr>
                 </c:forEach>
             </table>
         </div>
+        <%--<jsp:include page="WEB-INF/main/shared/footer.jsp"></jsp:include>--%>
     </body>
 </html>

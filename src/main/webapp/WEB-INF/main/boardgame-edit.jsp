@@ -1,0 +1,48 @@
+<%-- 
+    Document   : boardgame-home
+    Created on : Mar 29, 2021, 10:19:57 PM
+    Author     : vanni
+--%>
+<%@page language="java" contentType="text/html" pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>  
+<!DOCTYPE html>
+<html>
+    <body>
+        <jsp:include page="shared/header.jsp"></jsp:include>
+        <jsp:include page="shared/error.jsp"></jsp:include>
+        <div align="center">
+            <table border="0">
+                <caption><h2>Edit boardgame</h2></caption>
+                <form method="POST" action="${pageContext.request.contextPath}/boardgameEdit">
+                    <tr>
+                        <td>Id</td>
+                        <td><input readonly="true" type="text" name="boardgameId" value="${boardgame.getId()}" /></td>
+                    </tr>
+                    <tr>
+                        <td>Name</td>
+                        <td><input type="text" name="boardgameName" value="${boardgame.getName()}" /></td>
+                    </tr>
+                    <tr>
+                        <td>Release date</td>
+                        <td><input type="datetime-local" name="boardgameReleaseDate" value="${boardgame.getReleaseDate()}" /></td>
+                    </tr>
+                    <tr>
+                        <td>Designer</td>
+                        <td><input type="text" name="boardgameDesigner" value="${boardgame.getDesigner()}" /></td>
+                    </tr>
+                    <tr>
+                        <td>Price</td>
+                        <td><input type="text" name="boardgamePrice" value="${boardgame.getPrice()}" /></td>
+                    </tr>
+                    <tr>
+                        <td colspan ="2">
+                            <input type="submit" value= "Save" />
+                            <a href="${pageContext.request.contextPath}/boardgameList">Cancel</a>
+                        </td>
+                    </tr>
+                </form>
+            </table>
+        </div>
+        <jsp:include page="shared/footer.jsp"></jsp:include>
+    </body>
+</html>

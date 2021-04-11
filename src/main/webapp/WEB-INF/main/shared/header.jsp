@@ -12,8 +12,6 @@
  
   <div style="float: right; padding: 10px; text-align: right;">
      Hello <b>Guest</b>
-   <br/>
-     Search <input name="search">
   </div>
  
 </div>

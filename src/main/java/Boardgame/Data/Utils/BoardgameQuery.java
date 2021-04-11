@@ -7,6 +7,7 @@ package Boardgame.Data.Utils;
 
 import Boardgame.Data.Enum.SqlComparisonOperator;
 import Boardgame.Data.Models.Boardgame;
+import Boardgame.Data.Models.IBoardgame;
 import Boardgame.Data.SingletonDatabaseContext;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -24,6 +25,7 @@ import java.util.Stack;
 public class BoardgameQuery {    
     
     private static final String SQL_BOARDGAME_SELECT = "SELECT id, name, release_date, designer, price FROM boardgame_table";
+    private static final String SQL_BOARDGAME_UPDATE = "UPDATE boardgame_table";
         
     // TO DO 2021/05/04 TomasiV move to an extension class 
     private <T> List<T> convertQueryResultToListToEdit(ResultSet queryResult) throws SQLException {
@@ -39,8 +41,8 @@ public class BoardgameQuery {
         return boardgames;
     }
     
-    private static ArrayList<Boardgame> convertQueryResultToList(ResultSet queryResult) throws SQLException {
-        ArrayList<Boardgame> boardgames = new ArrayList<>();
+    private static ArrayList<IBoardgame> convertQueryResultToList(ResultSet queryResult) throws SQLException {
+        ArrayList<IBoardgame> boardgames = new ArrayList<>();
         
         while (queryResult.next()) {
             Boardgame boardgame =  new Boardgame(
@@ -51,13 +53,13 @@ public class BoardgameQuery {
                     queryResult.getFloat("price")
             );
             boardgames.add(boardgame);
-        }       
+        }
         
         return boardgames;
     }
     
-    // TO DO 2021/04/07 TomasiV Move next 2 functions to a DBUtils class
-    private static String createSelectSqlQuery(final String selectQuery, final List<String> whereConditions) {        
+    // TO DO 2021/04/07 TomasiV Move next 3 functions to a DBUtils class
+    private static String createSelectOrDeleteSqlQuery(final String selectQuery, final List<String> whereConditions) {        
         final String PIECE_SEPARATOR = " ";
         
         StringBuilder sqlQueryBuilder = new StringBuilder(selectQuery);
@@ -81,6 +83,58 @@ public class BoardgameQuery {
         });
         
         return sqlQueryBuilder.toString();
+    }
+    
+    private static String createUpdateSqlQuery(final String updateQuery, final List<String> setAssignments, final List<String> whereConditions) {
+        final String PIECE_SEPARATOR = " ";
+        final String SET_ASSIGNAMENT_SEPARATOR = ",";
+        
+        StringBuilder sqlQueryBuilder = new StringBuilder(updateQuery);
+        sqlQueryBuilder.append(PIECE_SEPARATOR);
+        sqlQueryBuilder.append(SqlComparisonOperator.POSTGRESQL_UPDATE_SET_START_KEYWORD);
+        setAssignments.forEach((String set) -> {
+            sqlQueryBuilder
+                    .append(PIECE_SEPARATOR)
+                    .append(set)
+                    .append(SET_ASSIGNAMENT_SEPARATOR)
+                    .append(PIECE_SEPARATOR);
+        });
+        sqlQueryBuilder.deleteCharAt(sqlQueryBuilder.lastIndexOf(SET_ASSIGNAMENT_SEPARATOR));
+        Stack<String> queryConditionJoinOperators = new Stack<>();        
+        queryConditionJoinOperators.push(SqlComparisonOperator.POSTGRESQL_WHERE_CONDITION_START_KEYWORD);
+                
+        whereConditions.forEach((String where) -> {
+            String joinOperator;
+
+            if (queryConditionJoinOperators.empty()) {
+                queryConditionJoinOperators.push(SqlComparisonOperator.POSTGRESQL_AND_OPERATOR_KEYWORD);
+            }
+                        
+            joinOperator = queryConditionJoinOperators.pop();
+            
+            sqlQueryBuilder
+                    .append(PIECE_SEPARATOR)
+                    .append(joinOperator)
+                    .append(PIECE_SEPARATOR)
+                    .append(where);
+        });
+        
+        return sqlQueryBuilder.toString();
+    }
+    
+    private static String createSetAssignments(final String fieldName, final String fieldValue) {
+        final String PIECE_SEPARATOR = " ";
+        
+        StringBuilder sqlConditionBuilder = new StringBuilder(fieldName);
+        sqlConditionBuilder
+                .append(PIECE_SEPARATOR)
+                .append(SqlComparisonOperator.EQUALS.getOperatorString())
+                .append(PIECE_SEPARATOR)
+                .append(SqlComparisonOperator.POSTGRESQL_QUOTE);
+        sqlConditionBuilder.append(fieldValue);
+        sqlConditionBuilder.append(SqlComparisonOperator.POSTGRESQL_QUOTE);
+        
+        return sqlConditionBuilder.toString();
     }
     
     private static String createSqlCondition(final String fieldName, final String fieldValue, final SqlComparisonOperator comparisonOperator) {
@@ -107,9 +161,10 @@ public class BoardgameQuery {
     }
             
     public static ArrayList<Boardgame> getByFilter(Boardgame filterValues) throws SQLException {        
+    public static ArrayList<IBoardgame> getByFilter(IBoardgame filterValues) throws SQLException {
         Connection conn = SingletonDatabaseContext.getInstance().getConnection();
         Statement statement = conn.createStatement();
-        List<String> whereConditions = new ArrayList<>();        
+        List<String> whereConditions = new ArrayList<>();
         
         if (!filterValues.getDesigner().isEmpty()) {
             whereConditions.add(BoardgameQuery.createSqlCondition("designer", filterValues.getDesigner(), SqlComparisonOperator.EQUALS));
@@ -131,9 +186,64 @@ public class BoardgameQuery {
             whereConditions.add(BoardgameQuery.createSqlCondition("release_date", filterValues.getReleaseDate().toString(), SqlComparisonOperator.EQUALS));
         }
         
-        String filteredQuertSql = BoardgameQuery.createSelectSqlQuery(BoardgameQuery.SQL_BOARDGAME_SELECT, whereConditions);        
-        ResultSet rs = statement.executeQuery(filteredQuertSql);
+        String filteredQuerySql = BoardgameQuery.createSelectOrDeleteSqlQuery(BoardgameQuery.SQL_BOARDGAME_SELECT, whereConditions);
+        ResultSet rs = statement.executeQuery(filteredQuerySql);
         
-        return BoardgameQuery.convertQueryResultToList(rs);        
+        return BoardgameQuery.convertQueryResultToList(rs);
+    }
+    
+    public static IBoardgame getById(int boardgameId) throws SQLException {
+        Connection conn = SingletonDatabaseContext.getInstance().getConnection();
+        Statement statement = conn.createStatement();
+        List<String> whereConditions = new ArrayList<>();
+        
+        if (boardgameId> 0) {
+            whereConditions.add(BoardgameQuery.createSqlCondition("id", ((Integer)boardgameId).toString(), SqlComparisonOperator.EQUALS));
+        }
+        
+        String filteredQuerySql = BoardgameQuery.createSelectOrDeleteSqlQuery(BoardgameQuery.SQL_BOARDGAME_SELECT, whereConditions);
+        ResultSet queryResult = statement.executeQuery(filteredQuerySql);
+        queryResult.next();
+        Boardgame boardgame =  new Boardgame(
+                    queryResult.getInt("id"),
+                    queryResult.getString("name"),
+                    queryResult.getObject("release_date", LocalDate.class),
+                    queryResult.getString("designer"),
+                    queryResult.getFloat("price")
+        );
+        
+        return boardgame;
     }    
+    
+    public static boolean update(IBoardgame newValues) throws SQLException {
+        Connection conn = SingletonDatabaseContext.getInstance().getConnection();
+        Statement statement = conn.createStatement();
+        List<String> setAssignments = new ArrayList<>();
+        List<String> whereConditions = new ArrayList<>();
+        
+        if (newValues.getId() > 0) {
+            whereConditions.add(BoardgameQuery.createSqlCondition("id", ((Integer)newValues.getId()).toString(), SqlComparisonOperator.EQUALS));
+        }
+        
+        if (!newValues.getDesigner().isEmpty()) {
+            setAssignments.add(BoardgameQuery.createSetAssignments("designer", newValues.getDesigner()));
+        }
+        
+        if (!newValues.getName().isEmpty()) {
+            setAssignments.add(BoardgameQuery.createSetAssignments("name", newValues.getName()));
+        }
+        
+        if (newValues.getPrice() > 0) {
+            setAssignments.add(BoardgameQuery.createSetAssignments("price", ((Float)newValues.getPrice()).toString()));
+        }
+        
+        if (newValues.getReleaseDate() != LocalDate.MIN) {
+            setAssignments.add(BoardgameQuery.createSetAssignments("release_date", newValues.getReleaseDate().toString()));
+        }
+        
+        String filteredQuerySql = BoardgameQuery.createUpdateSqlQuery(BoardgameQuery.SQL_BOARDGAME_UPDATE, setAssignments, whereConditions);
+        int rs = statement.executeUpdate(filteredQuerySql);
+        
+        return rs > 0;
+    }
 }
