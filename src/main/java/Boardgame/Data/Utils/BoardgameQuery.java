@@ -24,6 +24,7 @@ import java.util.Stack;
  */
 public class BoardgameQuery {    
     
+    private static final String SQL_BOARDGAME_DELETE = "DELETE FROM boardgame_table";
     private static final String SQL_BOARDGAME_SELECT = "SELECT id, name, release_date, designer, price FROM boardgame_table";
     private static final String SQL_BOARDGAME_UPDATE = "UPDATE boardgame_table";
         
@@ -159,8 +160,22 @@ public class BoardgameQuery {
         
         return sqlConditionBuilder.toString();
     }
-            
-    public static ArrayList<Boardgame> getByFilter(Boardgame filterValues) throws SQLException {        
+    
+    public static boolean delete(int boardgameId) throws SQLException {
+        Connection conn = SingletonDatabaseContext.getInstance().getConnection();
+        Statement statement = conn.createStatement();
+        List<String> whereConditions = new ArrayList<>();
+        
+        if (boardgameId > 0) {
+            whereConditions.add(BoardgameQuery.createSqlCondition("id", ((Integer)boardgameId).toString(), SqlComparisonOperator.EQUALS));
+        }
+        
+        String filteredQuerySql = BoardgameQuery.createSelectOrDeleteSqlQuery(BoardgameQuery.SQL_BOARDGAME_DELETE, whereConditions);
+        int rs = statement.executeUpdate(filteredQuerySql);
+        
+        return rs > 0;
+    }
+    
     public static ArrayList<IBoardgame> getByFilter(IBoardgame filterValues) throws SQLException {
         Connection conn = SingletonDatabaseContext.getInstance().getConnection();
         Statement statement = conn.createStatement();
