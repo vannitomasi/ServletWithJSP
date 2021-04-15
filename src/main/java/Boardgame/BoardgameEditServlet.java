@@ -75,33 +75,18 @@ public class BoardgameEditServlet extends HttpServlet {
         );
         
         String errorMessage = null;
-        boolean isUpdateSuccessful = false;
         try {
-            isUpdateSuccessful = BoardgameQuery.update(boardgame);
-            // TO DO 2021/04/11 TomasiV on error it resets values
-            // throw new SQLException("What has happened?");
+            if(!BoardgameQuery.update(boardgame)) {
+                errorMessage = "Error while updating boardgame";
+            }
         } catch (SQLException ex) {            
             errorMessage = ex.getMessage();
             Logger.getLogger(BoardgameEditServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
-        request.setAttribute("errorMessage", errorMessage);
-        if (isUpdateSuccessful) {
-            request.setAttribute("successMessage", "Boardgame '" + boardgame.getName() + "' successfully updated");
-        }
-        
+        request.setAttribute("errorMessage", errorMessage);        
         if (errorMessage == null || errorMessage.isEmpty()) {
-            request.getServletContext()
-                    .getRequestDispatcher("/WEB-INF/main/boardgame-home.jsp")
-                    .forward(request, response);
-            // TO DO 2021/04/11 TomasiV redirecting to the servlet "loses" request attributes, fix
-            // response.sendRedirect(request.getContextPath() + "/boardgameList");
+            response.sendRedirect(request.getContextPath() + "/boardgameList");
         } else {
-            request.setAttribute("boardgameId", boardgame.getId());
-            request.setAttribute("boardgameName", boardgame.getName());
-            request.setAttribute("boardgameReleaseDate", boardgame.getReleaseDate().toString());
-            request.setAttribute("boardgameDesigner", boardgame.getDesigner());
-            request.setAttribute("boardgamePrice", ((Float)boardgame.getPrice()).toString());
-        
             request.getServletContext()
                     .getRequestDispatcher("/WEB-INF/main/boardgame-edit.jsp")
                     .forward(request, response);

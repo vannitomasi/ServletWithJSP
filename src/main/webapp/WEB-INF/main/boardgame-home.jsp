@@ -9,51 +9,54 @@
 <html>
     <body>
         <jsp:include page="shared/header.jsp"></jsp:include>
-        <jsp:include page="shared/error.jsp"></jsp:include>
-        <jsp:include page="shared/success.jsp"></jsp:include>
         <div align="center">
+            <caption><h2>Boardgame list</h2></caption>
             <table border="1" cellpadding="5">
-                <caption><h2>Boardgame list</h2></caption>
-                <tr>
-                    <th>Id</th>
-                    <th>Name</th>
-                    <th>Release date</th>
-                    <th>Designer</th>
-                    <th>Price</th>
-                    <th colspan="2">Actions</th>
-                </tr>
-                <tr>
-                    <form method="GET" action="${pageContext.request.contextPath}/boardgameList">
-                        <td><input type="text" name="boardgameId" /></td>
-                        <td><input type="text" name="boardgameName" /></td>
-                        <td><input type="datetime-local" name="boardgameReleaseDate" /> </td>
-                        <td><input type="text" name="boardgameDesigner" /> </td>
-                        <td><input type="text" name="boardgamePrice" /> </td>
-                        <!-- TO DO 2021/04/08 TomasiV add weight parameter -->
-                        <td></td>
-                        <td colspan="2">
-                            <input type="submit" value="Filter" />
-                            <a href="${pageContext.request.contextPath}/boardgameList">Cancel</a>
-                        </td>
-                    </form>
-                </tr>
-                <c:forEach items="${boardgameList}" var="boardgame">
+                <c:if test="${errorMessage == null}">
                     <tr>
-                        <td>${boardgame.getId()}</td>
-                        <td>${boardgame.getName()}</td>
-                        <td>${boardgame.getReleaseDate()}</td>
-                        <td>${boardgame.getDesigner()}</td>
-                        <td>${boardgame.getPrice()}</td>
-                        <td></td>
-                        <td colspan ="2">
-                            <a href="${pageContext.request.contextPath}/boardgameEdit?id=${boardgame.getId()}">Edit</a>
-                            <a href="${pageContext.request.contextPath}/boardgameDelete?id=${boardgame.getId()}">Delete</a>
-                        </td>
+                        <th>Id</th>
+                        <th>Name</th>
+                        <th>Release date</th>
+                        <th>Designer</th>
+                        <th>Price</th>
+                        <th colspan="2">Actions</th>
                     </tr>
-                </c:forEach>
+                    <tr>
+                        <form method="GET" action="${pageContext.request.contextPath}/boardgameList">
+                            <td><input type="text" name="boardgameId" /></td>
+                            <td><input type="text" name="boardgameName" /></td>
+                            <td><input type="datetime-local" name="boardgameReleaseDate" /> </td>
+                            <td><input type="text" name="boardgameDesigner" /> </td>
+                            <td><input type="text" name="boardgamePrice" /> </td>
+                            <td colspan="2">
+                                <input type="submit" value="Filter" />
+                            </td>
+                        </form>
+                    </tr>
+                    <c:forEach items="${boardgameList}" var="boardgame">
+                        <tr>
+                            <td>${boardgame.getId()}</td>
+                            <td>${boardgame.getName()}</td>
+                            <td>${boardgame.getReleaseDate()}</td>
+                            <td>${boardgame.getDesigner()}</td>
+                            <td>${boardgame.getPrice()}</td>
+                            <td>
+                                <a href="${pageContext.request.contextPath}/boardgameEdit?id=${boardgame.getId()}">Edit</a>
+                            </td>
+                            <td>
+                                <form method="POST" action="${pageContext.request.contextPath}/boardgameDelete">
+                                    <input type="hidden" name="id" value="${boardgame.getId()}" />
+                                    <input type="submit" value="Delete" />
+                                </form>
+                            </td>
+                        </tr>
+                    </c:forEach>
+                </c:if>
                 
             </table>
+            <jsp:include page="shared/error.jsp"></jsp:include>
+            <a href="${pageContext.request.contextPath}/boardgameList">Cancel</a>
         </div>
         <jsp:include page="shared/footer.jsp"></jsp:include>
     </body>
-</html>
+</html>  
