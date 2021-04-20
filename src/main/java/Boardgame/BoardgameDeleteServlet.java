@@ -39,10 +39,9 @@ public class BoardgameDeleteServlet extends HttpServlet {
         if (boardgameIdToDeleteString != null && !boardgameIdToDeleteString.isEmpty()) {
             try {
                 int boardgameIdToDelete = Integer.parseInt(boardgameIdToDeleteString);
-                if (BoardgameQuery.delete(boardgameIdToDelete)) {
-                    request.setAttribute("errorMessage", "Error while deleting boardgame");
+                if (!BoardgameQuery.delete(boardgameIdToDelete)) {
+                    errorMessage = "Error while deleting boardgame";
                 }
-                throw new SQLException("Prova errore delete");
             } catch (SQLException ex) {
                 errorMessage = ex.getMessage();
                 Logger.getLogger(BoardgameEditServlet.class.getName()).log(Level.SEVERE, null, ex);
@@ -51,7 +50,7 @@ public class BoardgameDeleteServlet extends HttpServlet {
             request.setAttribute("errorMessage", errorMessage);
         }
         
-        this.getServletContext().getRequestDispatcher("/WEB-INF/main/boardgame-home.jsp").forward(request, response);
+        response.sendRedirect(request.getContextPath() + "/boardgameList");
     }
 
     /**

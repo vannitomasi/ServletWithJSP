@@ -10,9 +10,16 @@
     <body>
         <jsp:include page="shared/header.jsp"></jsp:include>
         <div align="center">
-            <caption><h2>Boardgame list</h2></caption>
+            <h2>Boardgame list</h2>
+        </div>
+        <div align="center">
             <table border="1" cellpadding="5">
                 <c:if test="${errorMessage == null}">
+                    <tr>
+                        <td align="right" colspan="7">
+                            <a href="${pageContext.request.contextPath}/boardgameCreate">Add new</a> 
+                        </td>
+                    </tr>
                     <tr>
                         <th>Id</th>
                         <th>Name</th>

@@ -24,8 +24,9 @@ import java.util.Stack;
  */
 public class BoardgameQuery {    
     
+    private static final String SQL_BOARDGAME_CREATE = "INSERT INTO boardgame_table (name, release_date, designer, price) VALUES";
     private static final String SQL_BOARDGAME_DELETE = "DELETE FROM boardgame_table";
-    private static final String SQL_BOARDGAME_SELECT = "SELECT id, name, release_date, designer, price FROM boardgame_table";
+    private static final String SQL_BOARDGAME_READ = "SELECT id, name, release_date, designer, price FROM boardgame_table";
     private static final String SQL_BOARDGAME_UPDATE = "UPDATE boardgame_table";
         
     // TO DO 2021/05/04 TomasiV move to an extension class 
@@ -57,6 +58,32 @@ public class BoardgameQuery {
         }
         
         return boardgames;
+    }
+    
+    public static boolean create(IBoardgame newValues) throws SQLException {
+        final String PIECE_SEPARATOR = " ";
+        final String POSTGRES_QUOTE_CHARACTER = "'";
+        final String VALUES_START = PIECE_SEPARATOR + "(" + POSTGRES_QUOTE_CHARACTER;
+        final String VALUES_END = POSTGRES_QUOTE_CHARACTER + ")";
+        final String VALUES_SEPARATOR = POSTGRES_QUOTE_CHARACTER + "," + PIECE_SEPARATOR + POSTGRES_QUOTE_CHARACTER;
+        
+        Connection conn = SingletonDatabaseContext.getInstance().getConnection();
+        Statement statement = conn.createStatement();
+        List<String> fieldValues = new ArrayList<>();
+                
+        fieldValues.add(newValues.getName());
+        fieldValues.add(newValues.getReleaseDate().toString());
+        fieldValues.add(newValues.getDesigner());
+        fieldValues.add(((Float)newValues.getPrice()).toString());
+        
+        StringBuilder sqlQueryBuilder = new StringBuilder(BoardgameQuery.SQL_BOARDGAME_CREATE);
+        sqlQueryBuilder
+                .append(VALUES_START)
+                .append(String.join(VALUES_SEPARATOR, fieldValues))
+                .append(VALUES_END);
+        int rs = statement.executeUpdate(sqlQueryBuilder.toString());
+        
+        return rs > 0;
     }
     
     // TO DO 2021/04/07 TomasiV Move next 3 functions to a DBUtils class
@@ -201,7 +228,7 @@ public class BoardgameQuery {
             whereConditions.add(BoardgameQuery.createSqlCondition("release_date", filterValues.getReleaseDate().toString(), SqlComparisonOperator.EQUALS));
         }
         
-        String filteredQuerySql = BoardgameQuery.createSelectOrDeleteSqlQuery(BoardgameQuery.SQL_BOARDGAME_SELECT, whereConditions);
+        String filteredQuerySql = BoardgameQuery.createSelectOrDeleteSqlQuery(BoardgameQuery.SQL_BOARDGAME_READ, whereConditions);
         ResultSet rs = statement.executeQuery(filteredQuerySql);
         
         return BoardgameQuery.convertQueryResultToList(rs);
@@ -212,11 +239,11 @@ public class BoardgameQuery {
         Statement statement = conn.createStatement();
         List<String> whereConditions = new ArrayList<>();
         
-        if (boardgameId> 0) {
+        if (boardgameId > 0) {
             whereConditions.add(BoardgameQuery.createSqlCondition("id", ((Integer)boardgameId).toString(), SqlComparisonOperator.EQUALS));
         }
         
-        String filteredQuerySql = BoardgameQuery.createSelectOrDeleteSqlQuery(BoardgameQuery.SQL_BOARDGAME_SELECT, whereConditions);
+        String filteredQuerySql = BoardgameQuery.createSelectOrDeleteSqlQuery(BoardgameQuery.SQL_BOARDGAME_READ, whereConditions);
         ResultSet queryResult = statement.executeQuery(filteredQuerySql);
         queryResult.next();
         Boardgame boardgame =  new Boardgame(
@@ -228,7 +255,7 @@ public class BoardgameQuery {
         );
         
         return boardgame;
-    }    
+    }
     
     public static boolean update(IBoardgame newValues) throws SQLException {
         Connection conn = SingletonDatabaseContext.getInstance().getConnection();
