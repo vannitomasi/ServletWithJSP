@@ -48,7 +48,7 @@
                             <td>${boardgame.getDesigner()}</td>
                             <td>${boardgame.getPrice()}</td>
                             <td>
-                                <a href="${pageContext.request.contextPath}/boardgameEdit?id=${boardgame.getId()}">Edit</a>
+                                <a href="${pageContext.request.contextPath}/boardgameUpdate?id=${boardgame.getId()}">Edit</a>
                             </td>
                             <td>
                                 <form method="POST" action="${pageContext.request.contextPath}/boardgameDelete">

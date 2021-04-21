@@ -16,43 +16,44 @@ import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Stack;
 
 /**
  *
  * @author vanni
  */
-public class BoardgameQuery {    
+public class BoardgameQuery {
     
-    private static final String SQL_BOARDGAME_CREATE = "INSERT INTO boardgame_table (name, release_date, designer, price) VALUES";
-    private static final String SQL_BOARDGAME_DELETE = "DELETE FROM boardgame_table";
-    private static final String SQL_BOARDGAME_READ = "SELECT id, name, release_date, designer, price FROM boardgame_table";
-    private static final String SQL_BOARDGAME_UPDATE = "UPDATE boardgame_table";
-        
-    // TO DO 2021/05/04 TomasiV move to an extension class 
-    private <T> List<T> convertQueryResultToListToEdit(ResultSet queryResult) throws SQLException {
-        //https://stackoverflow.com/questions/21956042/mapping-a-jdbc-resultset-to-an-object/21956222
-        List<T> boardgames = new ArrayList<T>();
-        
-        while (queryResult.next()) {
-            Object listElementAsObject = queryResult.getObject(queryResult.getRow());
-            T listElement = (T)listElementAsObject;
-            boardgames.add(listElement);
-        }       
-        
-        return boardgames;
-    }
+    public static final String BOARDGAME_TABLE_NAME = "boardgame_table";
     
+    public static final String BOARDGAME_TABLE_DESIGNER_COLUMN_NAME = "designer";
+    public static final String BOARDGAME_TABLE_ID_COLUMN_NAME = "id";
+    public static final String BOARDGAME_TABLE_NAME_COLUMN_NAME = "name";
+    public static final String BOARDGAME_TABLE_PRICE_COLUMN_NAME = "price";
+    public static final String BOARDGAME_TABLE_RELEASE_DATE_COLUMN_NAME = "release_date";
+    public static final String BOARDGAME_TABLE_SORTED_COLUMNS_NAME =
+            BOARDGAME_TABLE_NAME_COLUMN_NAME + PostgreSQLDBUtils.SET_ASSIGNAMENT_SEPARATOR + PostgreSQLDBUtils.PIECE_SEPARATOR +
+            BOARDGAME_TABLE_RELEASE_DATE_COLUMN_NAME + PostgreSQLDBUtils.SET_ASSIGNAMENT_SEPARATOR + PostgreSQLDBUtils.PIECE_SEPARATOR +
+            BOARDGAME_TABLE_DESIGNER_COLUMN_NAME + PostgreSQLDBUtils.SET_ASSIGNAMENT_SEPARATOR + PostgreSQLDBUtils.PIECE_SEPARATOR +
+            BOARDGAME_TABLE_PRICE_COLUMN_NAME;    
+    
+    private static final String SQL_BOARDGAME_CREATE = "INSERT INTO " + BOARDGAME_TABLE_NAME + " (" + BOARDGAME_TABLE_SORTED_COLUMNS_NAME + ") VALUES";
+    private static final String SQL_BOARDGAME_DELETE = "DELETE FROM " + BOARDGAME_TABLE_NAME;
+    private static final String SQL_BOARDGAME_READ = "SELECT " +
+            BOARDGAME_TABLE_ID_COLUMN_NAME + PostgreSQLDBUtils.SET_ASSIGNAMENT_SEPARATOR + PostgreSQLDBUtils.PIECE_SEPARATOR +
+            BOARDGAME_TABLE_SORTED_COLUMNS_NAME + " FROM " + BOARDGAME_TABLE_NAME;
+    private static final String SQL_BOARDGAME_UPDATE = "UPDATE " + BOARDGAME_TABLE_NAME;
+        
+    // TO DO 2021/05/04 TomasiV if possible make this method generic (and move it to DBUtils)
     private static ArrayList<IBoardgame> convertQueryResultToList(ResultSet queryResult) throws SQLException {
         ArrayList<IBoardgame> boardgames = new ArrayList<>();
         
         while (queryResult.next()) {
             Boardgame boardgame =  new Boardgame(
-                    queryResult.getInt("id"),
-                    queryResult.getString("name"),
-                    queryResult.getObject("release_date", LocalDate.class),
-                    queryResult.getString("designer"),
-                    queryResult.getFloat("price")
+                    queryResult.getInt(BOARDGAME_TABLE_ID_COLUMN_NAME),
+                    queryResult.getString(BOARDGAME_TABLE_NAME_COLUMN_NAME),
+                    queryResult.getObject(BOARDGAME_TABLE_RELEASE_DATE_COLUMN_NAME, LocalDate.class),
+                    queryResult.getString(BOARDGAME_TABLE_DESIGNER_COLUMN_NAME),
+                    queryResult.getFloat(BOARDGAME_TABLE_PRICE_COLUMN_NAME)
             );
             boardgames.add(boardgame);
         }
@@ -61,12 +62,6 @@ public class BoardgameQuery {
     }
     
     public static boolean create(IBoardgame newValues) throws SQLException {
-        final String PIECE_SEPARATOR = " ";
-        final String POSTGRES_QUOTE_CHARACTER = "'";
-        final String VALUES_START = PIECE_SEPARATOR + "(" + POSTGRES_QUOTE_CHARACTER;
-        final String VALUES_END = POSTGRES_QUOTE_CHARACTER + ")";
-        final String VALUES_SEPARATOR = POSTGRES_QUOTE_CHARACTER + "," + PIECE_SEPARATOR + POSTGRES_QUOTE_CHARACTER;
-        
         Connection conn = SingletonDatabaseContext.getInstance().getConnection();
         Statement statement = conn.createStatement();
         List<String> fieldValues = new ArrayList<>();
@@ -78,115 +73,13 @@ public class BoardgameQuery {
         
         StringBuilder sqlQueryBuilder = new StringBuilder(BoardgameQuery.SQL_BOARDGAME_CREATE);
         sqlQueryBuilder
-                .append(VALUES_START)
-                .append(String.join(VALUES_SEPARATOR, fieldValues))
-                .append(VALUES_END);
+                .append(PostgreSQLDBUtils.INSERT_INTO_VALUES_START)
+                .append(String.join(PostgreSQLDBUtils.INSERT_INTO_VALUES_SEPARATOR, fieldValues))
+                .append(PostgreSQLDBUtils.INSERT_INTO_VALUES_END);
         int rs = statement.executeUpdate(sqlQueryBuilder.toString());
         
         return rs > 0;
-    }
-    
-    // TO DO 2021/04/07 TomasiV Move next 3 functions to a DBUtils class
-    private static String createSelectOrDeleteSqlQuery(final String selectQuery, final List<String> whereConditions) {        
-        final String PIECE_SEPARATOR = " ";
-        
-        StringBuilder sqlQueryBuilder = new StringBuilder(selectQuery);
-        Stack<String> queryConditionJoinOperators = new Stack<>();        
-        queryConditionJoinOperators.push(SqlComparisonOperator.POSTGRESQL_WHERE_CONDITION_START_KEYWORD);
-                
-        whereConditions.forEach((String where) -> {
-            String joinOperator;
-
-            if (queryConditionJoinOperators.empty()) {
-                queryConditionJoinOperators.push(SqlComparisonOperator.POSTGRESQL_AND_OPERATOR_KEYWORD);
-            }
-                        
-            joinOperator = queryConditionJoinOperators.pop();
-            
-            sqlQueryBuilder
-                    .append(PIECE_SEPARATOR)
-                    .append(joinOperator)
-                    .append(PIECE_SEPARATOR)
-                    .append(where);
-        });
-        
-        return sqlQueryBuilder.toString();
-    }
-    
-    private static String createUpdateSqlQuery(final String updateQuery, final List<String> setAssignments, final List<String> whereConditions) {
-        final String PIECE_SEPARATOR = " ";
-        final String SET_ASSIGNAMENT_SEPARATOR = ",";
-        
-        StringBuilder sqlQueryBuilder = new StringBuilder(updateQuery);
-        sqlQueryBuilder.append(PIECE_SEPARATOR);
-        sqlQueryBuilder.append(SqlComparisonOperator.POSTGRESQL_UPDATE_SET_START_KEYWORD);
-        setAssignments.forEach((String set) -> {
-            sqlQueryBuilder
-                    .append(PIECE_SEPARATOR)
-                    .append(set)
-                    .append(SET_ASSIGNAMENT_SEPARATOR)
-                    .append(PIECE_SEPARATOR);
-        });
-        sqlQueryBuilder.deleteCharAt(sqlQueryBuilder.lastIndexOf(SET_ASSIGNAMENT_SEPARATOR));
-        Stack<String> queryConditionJoinOperators = new Stack<>();        
-        queryConditionJoinOperators.push(SqlComparisonOperator.POSTGRESQL_WHERE_CONDITION_START_KEYWORD);
-                
-        whereConditions.forEach((String where) -> {
-            String joinOperator;
-
-            if (queryConditionJoinOperators.empty()) {
-                queryConditionJoinOperators.push(SqlComparisonOperator.POSTGRESQL_AND_OPERATOR_KEYWORD);
-            }
-                        
-            joinOperator = queryConditionJoinOperators.pop();
-            
-            sqlQueryBuilder
-                    .append(PIECE_SEPARATOR)
-                    .append(joinOperator)
-                    .append(PIECE_SEPARATOR)
-                    .append(where);
-        });
-        
-        return sqlQueryBuilder.toString();
-    }
-    
-    private static String createSetAssignments(final String fieldName, final String fieldValue) {
-        final String PIECE_SEPARATOR = " ";
-        
-        StringBuilder sqlConditionBuilder = new StringBuilder(fieldName);
-        sqlConditionBuilder
-                .append(PIECE_SEPARATOR)
-                .append(SqlComparisonOperator.EQUALS.getOperatorString())
-                .append(PIECE_SEPARATOR)
-                .append(SqlComparisonOperator.POSTGRESQL_QUOTE);
-        sqlConditionBuilder.append(fieldValue);
-        sqlConditionBuilder.append(SqlComparisonOperator.POSTGRESQL_QUOTE);
-        
-        return sqlConditionBuilder.toString();
-    }
-    
-    private static String createSqlCondition(final String fieldName, final String fieldValue, final SqlComparisonOperator comparisonOperator) {
-        final String PIECE_SEPARATOR = " ";
-        
-        StringBuilder sqlConditionBuilder = new StringBuilder(fieldName);        
-        sqlConditionBuilder
-                .append(PIECE_SEPARATOR)
-                .append(comparisonOperator.getOperatorString())
-                .append(PIECE_SEPARATOR)
-                .append(SqlComparisonOperator.POSTGRESQL_QUOTE);
-        if (comparisonOperator.hasStartWildcar()) {
-            sqlConditionBuilder.append(SqlComparisonOperator.POSTGRESQL_WILDCAR);
-        }
-        
-        sqlConditionBuilder.append(fieldValue);
-        if (comparisonOperator.hasEndWildcar()) {
-            sqlConditionBuilder.append(SqlComparisonOperator.POSTGRESQL_WILDCAR);
-        }
-        
-        sqlConditionBuilder.append(SqlComparisonOperator.POSTGRESQL_QUOTE);
-        
-        return sqlConditionBuilder.toString();
-    }
+    }    
     
     public static boolean delete(int boardgameId) throws SQLException {
         Connection conn = SingletonDatabaseContext.getInstance().getConnection();
@@ -194,10 +87,12 @@ public class BoardgameQuery {
         List<String> whereConditions = new ArrayList<>();
         
         if (boardgameId > 0) {
-            whereConditions.add(BoardgameQuery.createSqlCondition("id", ((Integer)boardgameId).toString(), SqlComparisonOperator.EQUALS));
+            whereConditions.add(DBUtils
+                    .createSqlCondition(BOARDGAME_TABLE_ID_COLUMN_NAME,
+                            ((Integer)boardgameId).toString(), SqlComparisonOperator.EQUALS));
         }
         
-        String filteredQuerySql = BoardgameQuery.createSelectOrDeleteSqlQuery(BoardgameQuery.SQL_BOARDGAME_DELETE, whereConditions);
+        String filteredQuerySql = DBUtils.createSelectOrDeleteSqlQuery(BoardgameQuery.SQL_BOARDGAME_DELETE, whereConditions);
         int rs = statement.executeUpdate(filteredQuerySql);
         
         return rs > 0;
@@ -209,26 +104,36 @@ public class BoardgameQuery {
         List<String> whereConditions = new ArrayList<>();
         
         if (!filterValues.getDesigner().isEmpty()) {
-            whereConditions.add(BoardgameQuery.createSqlCondition("designer", filterValues.getDesigner(), SqlComparisonOperator.EQUALS));
+            whereConditions.add(DBUtils
+                    .createSqlCondition(BOARDGAME_TABLE_DESIGNER_COLUMN_NAME,
+                            filterValues.getDesigner(), SqlComparisonOperator.EQUALS));
         }
         
         if (filterValues.getId() > 0) {
-            whereConditions.add(BoardgameQuery.createSqlCondition("id", ((Integer)filterValues.getId()).toString(), SqlComparisonOperator.EQUALS));
+            whereConditions.add(DBUtils
+                    .createSqlCondition(BOARDGAME_TABLE_ID_COLUMN_NAME,
+                            ((Integer)filterValues.getId()).toString(), SqlComparisonOperator.EQUALS));
         }
         
         if (!filterValues.getName().isEmpty()) {
-            whereConditions.add(BoardgameQuery.createSqlCondition("name", filterValues.getName(), SqlComparisonOperator.EQUALS));
+            whereConditions.add(DBUtils
+                    .createSqlCondition(BOARDGAME_TABLE_NAME_COLUMN_NAME,
+                            filterValues.getName(), SqlComparisonOperator.EQUALS));
         }
         
         if (filterValues.getPrice() > 0) {
-            whereConditions.add(BoardgameQuery.createSqlCondition("price", ((Float)filterValues.getPrice()).toString(), SqlComparisonOperator.EQUALS));
+            whereConditions.add(DBUtils
+                    .createSqlCondition(BOARDGAME_TABLE_PRICE_COLUMN_NAME,
+                            ((Float)filterValues.getPrice()).toString(), SqlComparisonOperator.EQUALS));
         }
         
         if (filterValues.getReleaseDate() != LocalDate.MIN) {
-            whereConditions.add(BoardgameQuery.createSqlCondition("release_date", filterValues.getReleaseDate().toString(), SqlComparisonOperator.EQUALS));
+            whereConditions.add(DBUtils
+                    .createSqlCondition(BOARDGAME_TABLE_RELEASE_DATE_COLUMN_NAME,
+                            filterValues.getReleaseDate().toString(), SqlComparisonOperator.EQUALS));
         }
         
-        String filteredQuerySql = BoardgameQuery.createSelectOrDeleteSqlQuery(BoardgameQuery.SQL_BOARDGAME_READ, whereConditions);
+        String filteredQuerySql = DBUtils.createSelectOrDeleteSqlQuery(BoardgameQuery.SQL_BOARDGAME_READ, whereConditions);
         ResultSet rs = statement.executeQuery(filteredQuerySql);
         
         return BoardgameQuery.convertQueryResultToList(rs);
@@ -240,18 +145,18 @@ public class BoardgameQuery {
         List<String> whereConditions = new ArrayList<>();
         
         if (boardgameId > 0) {
-            whereConditions.add(BoardgameQuery.createSqlCondition("id", ((Integer)boardgameId).toString(), SqlComparisonOperator.EQUALS));
+            whereConditions.add(DBUtils.createSqlCondition(BOARDGAME_TABLE_ID_COLUMN_NAME, ((Integer)boardgameId).toString(), SqlComparisonOperator.EQUALS));
         }
         
-        String filteredQuerySql = BoardgameQuery.createSelectOrDeleteSqlQuery(BoardgameQuery.SQL_BOARDGAME_READ, whereConditions);
+        String filteredQuerySql = DBUtils.createSelectOrDeleteSqlQuery(BoardgameQuery.SQL_BOARDGAME_READ, whereConditions);
         ResultSet queryResult = statement.executeQuery(filteredQuerySql);
         queryResult.next();
         Boardgame boardgame =  new Boardgame(
-                    queryResult.getInt("id"),
-                    queryResult.getString("name"),
-                    queryResult.getObject("release_date", LocalDate.class),
-                    queryResult.getString("designer"),
-                    queryResult.getFloat("price")
+                    queryResult.getInt(BOARDGAME_TABLE_ID_COLUMN_NAME),
+                    queryResult.getString(BOARDGAME_TABLE_NAME_COLUMN_NAME),
+                    queryResult.getObject(BOARDGAME_TABLE_RELEASE_DATE_COLUMN_NAME, LocalDate.class),
+                    queryResult.getString(BOARDGAME_TABLE_DESIGNER_COLUMN_NAME),
+                    queryResult.getFloat(BOARDGAME_TABLE_PRICE_COLUMN_NAME)
         );
         
         return boardgame;
@@ -264,26 +169,36 @@ public class BoardgameQuery {
         List<String> whereConditions = new ArrayList<>();
         
         if (newValues.getId() > 0) {
-            whereConditions.add(BoardgameQuery.createSqlCondition("id", ((Integer)newValues.getId()).toString(), SqlComparisonOperator.EQUALS));
+            whereConditions.add(DBUtils
+                    .createSqlCondition(BOARDGAME_TABLE_ID_COLUMN_NAME,
+                            ((Integer)newValues.getId()).toString(), SqlComparisonOperator.EQUALS));
         }
         
         if (!newValues.getDesigner().isEmpty()) {
-            setAssignments.add(BoardgameQuery.createSetAssignments("designer", newValues.getDesigner()));
+            setAssignments.add(DBUtils
+                    .createSetAssignments(BOARDGAME_TABLE_DESIGNER_COLUMN_NAME,
+                            newValues.getDesigner()));
         }
         
         if (!newValues.getName().isEmpty()) {
-            setAssignments.add(BoardgameQuery.createSetAssignments("name", newValues.getName()));
+            setAssignments.add(DBUtils
+                    .createSetAssignments(BOARDGAME_TABLE_NAME_COLUMN_NAME,
+                            newValues.getName()));
         }
         
         if (newValues.getPrice() > 0) {
-            setAssignments.add(BoardgameQuery.createSetAssignments("price", ((Float)newValues.getPrice()).toString()));
+            setAssignments.add(DBUtils
+                    .createSetAssignments(BOARDGAME_TABLE_PRICE_COLUMN_NAME,
+                            ((Float)newValues.getPrice()).toString()));
         }
         
         if (newValues.getReleaseDate() != LocalDate.MIN) {
-            setAssignments.add(BoardgameQuery.createSetAssignments("release_date", newValues.getReleaseDate().toString()));
+            setAssignments.add(DBUtils
+                    .createSetAssignments(BOARDGAME_TABLE_RELEASE_DATE_COLUMN_NAME,
+                            newValues.getReleaseDate().toString()));
         }
         
-        String filteredQuerySql = BoardgameQuery.createUpdateSqlQuery(BoardgameQuery.SQL_BOARDGAME_UPDATE, setAssignments, whereConditions);
+        String filteredQuerySql = DBUtils.createUpdateSqlQuery(BoardgameQuery.SQL_BOARDGAME_UPDATE, setAssignments, whereConditions);
         int rs = statement.executeUpdate(filteredQuerySql);
         
         return rs > 0;

@@ -22,7 +22,6 @@ public class Boardgame implements IBoardgame, Serializable {
     public Boardgame() { }
     
     public Boardgame(Integer newId, String newName, LocalDate newReleaseDate, String newDesigner, float newPrice) {
-        // TO DO 2021/04/05 TomasiV find a way to use setter
         this.designer = newDesigner;
         this.id = newId;
         this.name = newName;
@@ -31,7 +30,6 @@ public class Boardgame implements IBoardgame, Serializable {
     }
     
     public Boardgame(String newId, String newName, String newReleaseDate, String newDesigner, String newPrice) {
-        // TO DO 2021/04/05 TomasiV find a way to use setter
         if (newDesigner != null && !newDesigner.isEmpty()) {
             this.designer = newDesigner;
         }

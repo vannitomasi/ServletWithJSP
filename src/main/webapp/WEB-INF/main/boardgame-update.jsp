@@ -10,10 +10,15 @@
     <body>
         <jsp:include page="shared/header.jsp"></jsp:include>
         <div align="center">
-            <h2>Add new boardgame</h2>
+            <h2>Edit boardgame</h2>
                 <c:if test="${errorMessage == null}">
-                    <form method="POST" action="${pageContext.request.contextPath}/boardgameCreate">
+                    <form method="POST" action="${pageContext.request.contextPath}/boardgameUpdate">
+                        <input type="hidden" name="boardgameId" value="${boardgame.getId()}" />
                         <table border="0">
+                            <tr>
+                                <td>Id</td>
+                                <td>${boardgame.getId()}</td>
+                            </tr>
                             <tr>
                                 <td>Name</td>
                                 <td><input type="text" name="boardgameName" value="${boardgame.getName()}" /></td>

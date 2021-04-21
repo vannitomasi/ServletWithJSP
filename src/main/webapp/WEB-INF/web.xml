@@ -6,14 +6,6 @@
         <res-type>javax.sql.ConnectionPoolDataSource</res-type>
         <res-auth>Container</res-auth>
     </resource-ref>
-    <servlet>
-        <servlet-name>BoardgameListServlet</servlet-name>
-        <servlet-class>Boardgame.BoardgameListServlet</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>BoardgameListServlet</servlet-name>
-        <url-pattern>/boardgameList</url-pattern>
-    </servlet-mapping>
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>
     </welcome-file-list>
