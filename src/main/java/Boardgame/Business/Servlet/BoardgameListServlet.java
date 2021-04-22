@@ -3,26 +3,29 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package Boardgame;
+package Boardgame.Business.Servlet;
 
+import Boardgame.Business.Utils.BusinessUtils;
 import Boardgame.Data.Models.Boardgame;
+import Boardgame.Data.Models.IBoardgame;
 import Boardgame.Data.Utils.BoardgameQuery;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.List;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-// TO DO 2021/05/04 TomasiV compiler says "uses unchecked or unsafe operations."
 /**
  *
  * @author vanni
  */
-public class BoardgameServlet extends HttpServlet {    
+@WebServlet(name = "BoardgameListServlet", urlPatterns = {BusinessUtils.BOARDGAME_LIST_URL_ROOT})
+public class BoardgameListServlet extends HttpServlet {    
     
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -34,26 +37,27 @@ public class BoardgameServlet extends HttpServlet {
      * @throws IOException if an I/O error occurs
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws IOException, ServletException, SQLException {
-        response.setContentType("text/html;charset=UTF-8");
-        
-        // TO DO 2021/4/1 TomasiV create a BoardgameClass
+            throws IOException, ServletException {        
         // TO DO 2021/4/1 TomasiV create a constant class
         Boardgame boardgame = new Boardgame(
-            request.getParameter("boardgameId"),
-            request.getParameter("boardgameName"),
-            request.getParameter("boardgameReleaseDate"),
-            request.getParameter("boardgameDesigner"),
-            request.getParameter("boardgamePrice")
+            request.getParameter(BusinessUtils.BOARDGAME_ID_PARAMETER_NAME),
+            request.getParameter(BusinessUtils.BOARDGAME_NAME_PARAMETER_NAME),
+            request.getParameter(BusinessUtils.BOARDGAME_RELEASE_DATE_PARAMETER_NAME),
+            request.getParameter(BusinessUtils.BOARDGAME_DESIGNER_PARAMETER_NAME),
+            request.getParameter(BusinessUtils.BOARDGAME_PRICE_PARAMETER_NAME)
         );
+        String errorMessage = null;
+        ArrayList<IBoardgame> boardgames = null;
         try {
-            List<Boardgame> boardgames = BoardgameQuery.getByFilter(boardgame);
-            
-            request.setAttribute("boardgameList", boardgames);
-            this.getServletContext().getRequestDispatcher("/WEB-INF/main/boardgame-home.jsp").forward(request, response);
+            boardgames = BoardgameQuery.getByFilter(boardgame);
         } catch (SQLException ex) {
-            System.err.println(ex);
+            errorMessage = ex.getMessage();
+            Logger.getLogger(BoardgameListServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
+        
+        request.setAttribute(BusinessUtils.BOARDGAME_LIST_PARAMETER_NAME, boardgames);
+        request.setAttribute(BusinessUtils.ERROR_MESSAGE_PARAMETER_NAME, errorMessage);
+        this.getServletContext().getRequestDispatcher(BusinessUtils.BOARDGAME_HOME_PAGE_PATH).forward(request, response);
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
@@ -68,11 +72,7 @@ public class BoardgameServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        try {
-            processRequest(request, response);
-        } catch (SQLException ex) {
-            Logger.getLogger(BoardgameServlet.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        processRequest(request, response);
     }
 
     /**
@@ -86,11 +86,7 @@ public class BoardgameServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        try {
-            processRequest(request, response);
-        } catch (SQLException ex) {
-            Logger.getLogger(BoardgameServlet.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        processRequest(request, response);
     }
 
     /**
@@ -100,7 +96,7 @@ public class BoardgameServlet extends HttpServlet {
      */
     @Override
     public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
+        return "Get the list of boardgames on database and forward them to the jsp view";
+    }
 
 }

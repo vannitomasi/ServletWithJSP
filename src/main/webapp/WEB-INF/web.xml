@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app version="4.0" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd">
-    <servlet>
-        <servlet-name>BoardgameServlet</servlet-name>
-        <servlet-class>Boardgame.BoardgameServlet</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>BoardgameServlet</servlet-name>
-        <url-pattern>/BoardgameServlet</url-pattern>
-    </servlet-mapping>
+    <resource-ref>
+    <description>DB Connection</description>
+        <res-ref-name>jdbc/boardgame_database</res-ref-name>
+        <res-type>javax.sql.ConnectionPoolDataSource</res-type>
+        <res-auth>Container</res-auth>
+    </resource-ref>
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>
     </welcome-file-list>

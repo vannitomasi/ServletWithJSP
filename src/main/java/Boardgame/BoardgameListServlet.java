@@ -6,10 +6,11 @@
 package Boardgame;
 
 import Boardgame.Data.Models.Boardgame;
+import Boardgame.Data.Models.IBoardgame;
 import Boardgame.Data.Utils.BoardgameQuery;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.List;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletException;
@@ -22,7 +23,8 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @author vanni
  */
-public class BoardgameServlet extends HttpServlet {    
+// servlet configuration not done by annotation to show that it can also be done using web.xml
+public class BoardgameListServlet extends HttpServlet {    
     
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -34,10 +36,7 @@ public class BoardgameServlet extends HttpServlet {
      * @throws IOException if an I/O error occurs
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws IOException, ServletException, SQLException {
-        response.setContentType("text/html;charset=UTF-8");
-        
-        // TO DO 2021/4/1 TomasiV create a BoardgameClass
+            throws IOException, ServletException {        
         // TO DO 2021/4/1 TomasiV create a constant class
         Boardgame boardgame = new Boardgame(
             request.getParameter("boardgameId"),
@@ -46,14 +45,19 @@ public class BoardgameServlet extends HttpServlet {
             request.getParameter("boardgameDesigner"),
             request.getParameter("boardgamePrice")
         );
+        String errorMessage = null;
+        ArrayList<IBoardgame> boardgames = null;
         try {
-            List<Boardgame> boardgames = BoardgameQuery.getByFilter(boardgame);
-            
-            request.setAttribute("boardgameList", boardgames);
-            this.getServletContext().getRequestDispatcher("/WEB-INF/main/boardgame-home.jsp").forward(request, response);
+            boardgames = BoardgameQuery.getByFilter(boardgame);
         } catch (SQLException ex) {
-            System.err.println(ex);
+            errorMessage = ex.getMessage();
+            Logger.getLogger(BoardgameListServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
+        
+        request.setAttribute("boardgameList", boardgames);
+        request.setAttribute("errorMessage", errorMessage);        
+        request.setAttribute("successMessage", request.getParameter("successMessage"));
+        this.getServletContext().getRequestDispatcher("/WEB-INF/main/boardgame-home.jsp").forward(request, response);
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
@@ -68,11 +72,7 @@ public class BoardgameServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        try {
-            processRequest(request, response);
-        } catch (SQLException ex) {
-            Logger.getLogger(BoardgameServlet.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        processRequest(request, response);
     }
 
     /**
@@ -86,11 +86,7 @@ public class BoardgameServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        try {
-            processRequest(request, response);
-        } catch (SQLException ex) {
-            Logger.getLogger(BoardgameServlet.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        processRequest(request, response);
     }
 
     /**
@@ -100,7 +96,7 @@ public class BoardgameServlet extends HttpServlet {
      */
     @Override
     public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
+        return "Get the list of boardgames on database and forward them to the jsp view";
+    }
 
 }
